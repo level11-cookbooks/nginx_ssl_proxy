@@ -81,9 +81,14 @@ end
 chef_gem "chef-rewind"
 require 'chef/rewind'
 
-# Write the new nginx config file
-rewind "template[nginx.conf]" do
+# Unwind the original nginx.conf template and create the new one.
+unwind "template[nginx.conf]" 
+
+template "#{node[:nginx][:dir]}/nginx.conf" do
   source "nginx.conf.erb"
+  owner "root"
+  group "root"
+  mode 0644
   variables(
     :ssl_server_declarations => cert_key_pairs.map { |ckp| ckp.reject { |k, v| ["crt", "key"].include?(k) } }
   )
