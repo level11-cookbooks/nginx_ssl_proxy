@@ -1,0 +1,30 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  require_chef_omnibus: 11.18.12
+
+platforms:
+  - name: ubuntu-14.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[apt]
+      - recipe[nginx_ssl_proxy::default]
+    attributes:
+      nginx:
+        ssl_only: false
+        cert_items:
+          - "umdev.net"
+        upstream:
+          name: "local_server"
+          servers:
+            - address: "127.0.0.1:8080"
+              max_fails: "3"
+              fail_timeout: "0"
+              weight: "1"
+              down: false
+    encrypted_data_bag_secret_key_path: "test/integration/encrypted_data_bag_secret"

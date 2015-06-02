@@ -18,6 +18,8 @@
 #
 
 include_recipe "nginx::default"
+include_recipe "chef-sugar"
+
 
 # Pull SSL info from an encrypted data bag item
 #
@@ -35,10 +37,10 @@ cert_key_pairs = node[:nginx][:cert_items].map do |cert_item|
   # By merging the cert data into the default_ssl_listen data,
   # we guarantee an ssl_listen value of '443' if not specified
   # in the cert data.
-  cert      = defaults_ssl_listen.merge(Chef::EncryptedDataBagItem.load("nginx_ssl_certs", cert_item))
+  cert = defaults_ssl_listen.merge(encrypted_data_bag_item_for_environment('ssl_certificates', cert_item))
   paths     = {
-    "crt_path"  => File.join(node[:nginx][:dir], node[:nginx][:ssldir], "#{cert["id"]}.crt"),
-    "key_path"  => File.join(node[:nginx][:dir], node[:nginx][:ssldir], "#{cert["id"]}.key"),
+    "crt_path"  => File.join(node[:nginx][:dir], node[:nginx][:ssldir], "#{cert_item}.crt"),
+    "key_path"  => File.join(node[:nginx][:dir], node[:nginx][:ssldir], "#{cert_item}.key"),
   }
   
   # cert is merged into paths in the event that paths were specified
@@ -75,12 +77,13 @@ cert_key_pairs.each do |ckp|
   end 
 end
 
+# Prepare to rewind nginx.conf
+chef_gem "chef-rewind"
+require 'chef/rewind'
+
 # Write the new nginx config file
-template "#{node[:nginx][:dir]}/nginx.conf" do
+rewind "template[nginx.conf]" do
   source "nginx.conf.erb"
-  owner "root"
-  group "root"
-  mode 0644
   variables(
     :ssl_server_declarations => cert_key_pairs.map { |ckp| ckp.reject { |k, v| ["crt", "key"].include?(k) } }
   )
