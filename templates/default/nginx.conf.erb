@@ -19,6 +19,9 @@ http {
     access_log      off;
     <% end %>
     proxy_buffering off;
+    <% if node[:nginx][:underscores_in_headers] %>
+    underscores_in_headers on;
+    <% end %>
 
     <% if node[:nginx][:keepalive] == "on" %>
     keepalive_timeout  <%= node[:nginx][:keepalive_timeout] %>; 

@@ -24,6 +24,7 @@ default[:nginx][:user]       = "www-data"
 default[:nginx][:worker_connections] = 1024
 default[:nginx][:worker_processes]   = 1
 default[:nginx][:gzip] = "off"
+default[:nginx][:underscores_in_headers] = true
 default[:nginx][:disable_access_log] = true
 
 # The following are new attributes defined in this cookbook.
